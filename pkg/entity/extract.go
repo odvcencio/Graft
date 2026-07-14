@@ -19,6 +19,9 @@ var ErrDataFormatSkipped = errors.New("data format file skipped")
 type ExtractOptions struct {
 	// ForceEntities bypasses the data format size denylist and always extracts.
 	ForceEntities bool
+	// ParseTimeoutMicros bounds the parser work performed by extraction. Zero
+	// preserves the pooled, unbounded behavior for existing callers.
+	ParseTimeoutMicros uint64
 }
 
 // Aliases for the shared node type classification maps.
@@ -74,7 +77,7 @@ func extractImpl(filename string, source []byte, opts ExtractOptions) (*EntityLi
 		return el, nil
 	}
 
-	bt, err := parseFilePooled(filename, source)
+	bt, err := parseFile(filename, source, opts.ParseTimeoutMicros)
 	if err != nil {
 		return nil, fmt.Errorf("parse error: %w", err)
 	}

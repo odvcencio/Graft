@@ -130,6 +130,17 @@ func TestExtractGoFile(t *testing.T) {
 	verifyUniqueKeys(t, el)
 }
 
+func TestExtractWithOptionsBoundsParsing(t *testing.T) {
+	source := []byte("package main\n" + strings.Repeat("func generated() { println(1) }\n", 100_000))
+	entities, err := ExtractWithOptions("main.go", source, ExtractOptions{ParseTimeoutMicros: 1})
+	if entities != nil {
+		t.Fatalf("timed-out extraction returned entities: %+v", entities)
+	}
+	if err == nil || !strings.Contains(err.Error(), "timeout") {
+		t.Fatalf("error = %v, want parse timeout", err)
+	}
+}
+
 func TestExtractGoMethodWithReceiver(t *testing.T) {
 	src := "package main\n\ntype T struct{}\n\nfunc (t T) M() {}\n"
 	el, err := Extract("main.go", []byte(src))
